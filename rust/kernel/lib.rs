@@ -73,6 +73,7 @@ pub mod workqueue;
 pub use bindings;
 pub use macros;
 pub use uapi;
+pub use thermal;
 
 #[doc(hidden)]
 pub use build_error::build_error;

@@ -22,6 +22,9 @@ always-$(CONFIG_RUST) += exports_helpers_generated.h \
 always-$(CONFIG_RUST) += uapi/uapi_generated.rs
 obj-$(CONFIG_RUST) += uapi.o
 
+always-$(CONFIG_RUST) += thermal/thermal_generated.rs
+obj-$(CONFIG_RUST) += thermal.o
+
 ifdef CONFIG_RUST_BUILD_ASSERT_ALLOW
 obj-$(CONFIG_RUST) += build_error.o
 else
@@ -110,7 +113,7 @@ rustdoc-ffi: $(src)/ffi.rs rustdoc-core FORCE
 
 rustdoc-kernel: private rustc_target_flags = --extern ffi \
     --extern build_error --extern macros=$(objtree)/$(obj)/libmacros.so \
-    --extern bindings --extern uapi
+    --extern bindings --extern uapi --extern thermal
 rustdoc-kernel: $(src)/kernel/lib.rs rustdoc-core rustdoc-ffi rustdoc-macros \
     rustdoc-compiler_builtins $(obj)/libmacros.so \
     $(obj)/bindings.o FORCE
@@ -139,9 +142,9 @@ rusttestlib-macros: $(src)/macros/lib.rs FORCE
 
 rusttestlib-kernel: private rustc_target_flags = --extern ffi \
     --extern build_error --extern macros \
-    --extern bindings --extern uapi
+    --extern bindings --extern uapi --extern thermal
 rusttestlib-kernel: $(src)/kernel/lib.rs \
-    rusttestlib-bindings rusttestlib-uapi rusttestlib-build_error \
+    rusttestlib-bindings rusttestlib-uapi rusttestlib-thermal rusttestlib-build_error \
     $(obj)/libmacros.so $(obj)/bindings.o FORCE
 	+$(call if_changed,rustc_test_library)
 
@@ -151,6 +154,10 @@ rusttestlib-bindings: $(src)/bindings/lib.rs rusttestlib-ffi FORCE
 
 rusttestlib-uapi: private rustc_target_flags = --extern ffi
 rusttestlib-uapi: $(src)/uapi/lib.rs rusttestlib-ffi FORCE
+	+$(call if_changed,rustc_test_library)
+
+rusttestlib-thermal: private rustc_target_flags = --extern ffi
+rusttestlib-thermal: $(src)/thermal/lib.rs rusttestlib-ffi FORCE
 	+$(call if_changed,rustc_test_library)
 
 quiet_cmd_rustdoc_test = RUSTDOC T $<
@@ -172,7 +179,7 @@ quiet_cmd_rustdoc_test_kernel = RUSTDOC TK $<
 	$(RUSTDOC) --test $(rust_flags) \
 		-L$(objtree)/$(obj) --extern ffi --extern kernel \
 		--extern build_error --extern macros \
-		--extern bindings --extern uapi \
+		--extern bindings --extern uapi --extern thermal \
 		--no-run --crate-name kernel -Zunstable-options \
 		--sysroot=/dev/null \
 		--test-builder $(objtree)/scripts/rustdoc_test_builder \
@@ -209,10 +216,10 @@ rusttest-macros: $(src)/macros/lib.rs \
 	+$(call if_changed,rustdoc_test)
 
 rusttest-kernel: private rustc_target_flags = --extern ffi \
-    --extern build_error --extern macros --extern bindings --extern uapi
+    --extern build_error --extern macros --extern bindings --extern uapi --extern thermal
 rusttest-kernel: $(src)/kernel/lib.rs rusttestlib-ffi rusttestlib-kernel \
     rusttestlib-build_error rusttestlib-macros rusttestlib-bindings \
-    rusttestlib-uapi FORCE
+    rusttestlib-uapi rusttestlib-thermal FORCE
 	+$(call if_changed,rustc_test)
 
 ifdef CONFIG_CC_IS_CLANG
@@ -301,6 +308,13 @@ $(obj)/uapi/uapi_generated.rs: private bindgen_target_flags = \
 $(obj)/uapi/uapi_generated.rs: $(src)/uapi/uapi_helper.h \
     $(src)/bindgen_parameters FORCE
 	$(call if_changed_dep,bindgen)
+
+$(obj)/thermal/thermal_generated.rs: private bindgen_target_flags = \
+    $(shell grep -Ev '^#|^$$' $(src)/bindgen_parameters)
+$(obj)/thermal/thermal_generated.rs: $(src)/thermal/thermal_helper.h \
+    $(src)/bindgen_parameters FORCE
+	$(call if_changed_dep,bindgen)
+
 
 # See `CFLAGS_REMOVE_helpers.o` above. In addition, Clang on C does not warn
 # with `-Wmissing-declarations` (unlike GCC), so it is not strictly needed here
@@ -427,10 +441,16 @@ $(obj)/uapi.o: $(src)/uapi/lib.rs \
     $(obj)/uapi/uapi_generated.rs FORCE
 	+$(call if_changed_rule,rustc_library)
 
+$(obj)/thermal.o: private rustc_target_flags = --extern ffi
+$(obj)/thermal.o: $(src)/thermal/lib.rs \
+    $(obj)/ffi.o \
+    $(obj)/thermal/thermal_generated.rs FORCE
+	+$(call if_changed_rule,rustc_library)
+
 $(obj)/kernel.o: private rustc_target_flags = --extern ffi \
-    --extern build_error --extern macros --extern bindings --extern uapi
+    --extern build_error --extern macros --extern bindings --extern uapi --extern thermal
 $(obj)/kernel.o: $(src)/kernel/lib.rs $(obj)/build_error.o \
-    $(obj)/libmacros.so $(obj)/bindings.o $(obj)/uapi.o FORCE
+    $(obj)/libmacros.so $(obj)/bindings.o $(obj)/uapi.o $(obj)/thermal.o FORCE
 	+$(call if_changed_rule,rustc_library)
 
 ifdef CONFIG_JUMP_LABEL
