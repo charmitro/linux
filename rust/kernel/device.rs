@@ -4,6 +4,8 @@
 //!
 //! C header: [`include/linux/device.h`](srctree/include/linux/device.h)
 
+pub mod irq;
+
 use crate::{
     bindings,
     str::CStr,

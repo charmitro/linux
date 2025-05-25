@@ -23,6 +23,12 @@
 # warning. We don't need to peek into it anyway.
 --opaque-type spinlock
 
+# Interrupt-related opaque types - complex kernel structures we don't need to examine
+--opaque-type irq_desc
+--opaque-type irqaction
+--opaque-type softirq_action
+--opaque-type tasklet_struct
+
 # `seccomp`'s comment gets understood as a doctest
 --no-doc-comments
 
