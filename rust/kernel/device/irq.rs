@@ -17,11 +17,11 @@ use crate::{
 use core::pin::Pin;
 
 /// Type alias for a device-managed IRQ registration.
-type DevresIrqRegistration<T> =
+pub type DevresIrqRegistration<T> =
     Devres<Pin<Box<IrqRegistration<T>, crate::alloc::allocator::Kmalloc>>>;
 
 /// Type alias for a device-managed threaded IRQ registration.
-type DevresThreadedIrqRegistration<T> =
+pub type DevresThreadedIrqRegistration<T> =
     Devres<Pin<Box<ThreadedIrqRegistration<T>, crate::alloc::allocator::Kmalloc>>>;
 
 /// Device extension for IRQ management.

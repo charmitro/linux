@@ -82,6 +82,18 @@ config SAMPLE_RUST_DRIVER_FAUX
 
 	  If unsure, say N.
 
+config SAMPLE_RUST_DRIVER_IRQ
+	tristate "IRQ Driver"
+	help
+	  This option builds the Rust IRQ handling driver sample.
+	  It demonstrates various interrupt handling patterns including
+	  basic handlers, threaded handlers, and revocable handlers.
+
+	  To compile this as a module, choose M here:
+	  the module will be called rust_driver_irq.
+
+	  If unsure, say N.
+
 config SAMPLE_RUST_HOSTPROGS
 	bool "Host programs"
 	help
