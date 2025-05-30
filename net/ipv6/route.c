@@ -5432,6 +5432,18 @@ static int ip6_route_mpath_info_create_nh(struct list_head *rt6_nh_list,
 			goto err;
 		}
 
+		/* Even though we checked for gateways earlier, we need to verify
+		 * the route actually qualifies for ECMP after nexthop creation,
+		 * as the gateway family needs to be properly set.
+		 */
+		if (!rt6_qualify_for_ecmp(rt)) {
+			err = -EINVAL;
+			NL_SET_ERR_MSG(extack,
+				       "Device only routes can not be added for IPv6 using the multipath API.");
+			nh->fib6_info = NULL;
+			goto err;
+		}
+
 		rt->fib6_nh->fib_nh_weight = nh->weight;
 
 		list_move_tail(&nh->list, &tmp);
