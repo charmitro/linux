@@ -81,6 +81,10 @@ int dib0700_ctrl_rd(struct dvb_usb_device *d, u8 *tx, u8 txlen, u8 *rx, u8 rxlen
 		err("tx buffer length is larger than 4. Not supported.");
 		return -EINVAL;
 	}
+	if (rxlen < 1) {
+		err("rx buffer length is smaller than 1. Makes no sense.");
+		return -EINVAL;
+	}
 
 	deb_data(">>> ");
 	debug_dump(tx,txlen,deb_data);
